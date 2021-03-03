@@ -14,6 +14,13 @@ import java.util.Properties;
 
 public class DBConnectionManager {
 
+	private static final DBConnectionManager dbConnectionManager = new DBConnectionManager();
+	private DBConnectionManager() {
+		
+	}
+	public static DBConnectionManager getDBConnectionManager() {
+		return dbConnectionManager;
+	}
     private Connection connection;
 
     public void setConnection(Connection connection) {
@@ -43,13 +50,15 @@ public class DBConnectionManager {
             "email VARCHAR(64) NOT NULL, " +
             "phoneNumber VARCHAR(64) NOT NULL" +
             ")";
+    public static final String INSERT_USER_DML_SQL = "INSERT INTO users(id,name,password,email,phoneNumber) VALUES " +
+          "(null,'A','******','a@gmail.com','1')" ;
 
-    public static final String INSERT_USER_DML_SQL = "INSERT INTO users(name,password,email,phoneNumber) VALUES " +
-            "('A','******','a@gmail.com','1') , " +
-            "('B','******','b@gmail.com','2') , " +
-            "('C','******','c@gmail.com','3') , " +
-            "('D','******','d@gmail.com','4') , " +
-            "('E','******','e@gmail.com','5')";
+//    public static final String INSERT_USER_DML_SQL = "INSERT INTO users(name,password,email,phoneNumber) VALUES " +
+//            "('A','******','a@gmail.com','1') , " +
+//            "('B','******','b@gmail.com','2') , " +
+//            "('C','******','c@gmail.com','3') , " +
+//            "('D','******','d@gmail.com','4') , " +
+//            "('E','******','e@gmail.com','5')";
 
 
     public static void main(String[] args) throws Exception {

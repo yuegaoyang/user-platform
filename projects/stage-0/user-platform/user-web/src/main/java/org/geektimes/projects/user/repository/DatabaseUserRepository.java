@@ -31,10 +31,20 @@ public class DatabaseUserRepository implements UserRepository {
 
     public static final String QUERY_ALL_USERS_DML_SQL = "SELECT id,name,password,email,phoneNumber FROM users";
 
+    private static DatabaseUserRepository databaseUserRepository=null;
     private final DBConnectionManager dbConnectionManager;
 
-    public DatabaseUserRepository(DBConnectionManager dbConnectionManager) {
+    private DatabaseUserRepository(DBConnectionManager dbConnectionManager) {
         this.dbConnectionManager = dbConnectionManager;
+    }
+    
+    public static DatabaseUserRepository getDatabaseUserRepository(DBConnectionManager dbConnectionManager) {
+    	if(null==databaseUserRepository) {
+    		synchronized(DatabaseUserRepository.class) {
+    			databaseUserRepository=new DatabaseUserRepository(dbConnectionManager);
+    		}
+    	}
+    	return databaseUserRepository;
     }
 
     private Connection getConnection() {
@@ -43,7 +53,7 @@ public class DatabaseUserRepository implements UserRepository {
 
     @Override
     public boolean save(User user) {
-        return false;
+        return executeUpdate(INSERT_USER_DML_SQL, user, User.class, COMMON_EXCEPTION_HANDLER)>0?true:false;
     }
 
     @Override
@@ -58,7 +68,11 @@ public class DatabaseUserRepository implements UserRepository {
 
     @Override
     public User getById(Long userId) {
-        return null;
+    	return executeQuery("SELECT id,name,password,email,phoneNumber FROM users WHERE id=?",
+                resultSet -> {
+                    // TODO
+                    return new User();
+                }, COMMON_EXCEPTION_HANDLER, userId);
     }
 
     @Override
@@ -137,6 +151,34 @@ public class DatabaseUserRepository implements UserRepository {
         return null;
     }
 
+    protected <T> int executeUpdate(String sql, T t, Class cl,
+            Consumer<Throwable> exceptionHandler) {
+    	Connection connection = getConnection();
+        try {
+        	BeanInfo userBeanInfo = Introspector.getBeanInfo(cl, Object.class);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            int i=0;
+            for (PropertyDescriptor propertyDescriptor : userBeanInfo.getPropertyDescriptors()) {
+            	i++;
+            	String fieldName = propertyDescriptor.getName();
+                Class fieldType = propertyDescriptor.getPropertyType();
+                String methodNamePojo = resultSetMethodMappings.get(fieldType);
+                Method methodPojo = cl.getMethod(methodNamePojo, String.class);
+                Class wrapperType = wrapperToPrimitive(fieldType);
+                if (wrapperType == null) {
+                    wrapperType = fieldType;
+                }
+                String methodNameState = preparedStatementMethodMappings.get(fieldType);
+                Method methodState = PreparedStatement.class.getMethod(methodNameState, wrapperType);
+                methodState.invoke(preparedStatement,i, methodState.invoke(t, null));
+            }
+            int resultSet = preparedStatement.executeUpdate();
+            return resultSet;
+        } catch (Throwable e) {
+            exceptionHandler.accept(e);
+        }
+    	return 0;
+    }
 
     private static String mapColumnLabel(String fieldName) {
         return fieldName;
