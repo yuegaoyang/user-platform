@@ -50,6 +50,10 @@ public class DatabaseUserRepository implements UserRepository {
     private Connection getConnection() {
         return dbConnectionManager.getConnection();
     }
+    
+    private void releaseConnection() {
+        dbConnectionManager.releaseConnection();;
+    }
 
     @Override
     public boolean save(User user) {
@@ -147,6 +151,8 @@ public class DatabaseUserRepository implements UserRepository {
             return function.apply(resultSet);
         } catch (Throwable e) {
             exceptionHandler.accept(e);
+        }finally {
+        	releaseConnection();
         }
         return null;
     }
@@ -176,6 +182,8 @@ public class DatabaseUserRepository implements UserRepository {
             return resultSet;
         } catch (Throwable e) {
             exceptionHandler.accept(e);
+        }finally {
+        	releaseConnection();
         }
     	return 0;
     }

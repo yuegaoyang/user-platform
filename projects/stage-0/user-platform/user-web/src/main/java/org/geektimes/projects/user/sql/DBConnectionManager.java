@@ -15,8 +15,14 @@ import java.util.Properties;
 public class DBConnectionManager {
 
 	private static final DBConnectionManager dbConnectionManager = new DBConnectionManager();
+	private final String DB_URL = "jdbc:derby:/db/user-platform;create=true";
 	private DBConnectionManager() {
-		
+        try {
+			this.connection = DriverManager.getConnection(DB_URL);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	public static DBConnectionManager getDBConnectionManager() {
 		return dbConnectionManager;
